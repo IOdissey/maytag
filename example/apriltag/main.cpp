@@ -1,3 +1,4 @@
+#include <array>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -18,6 +19,29 @@
 #include <apriltag/tag36h10.h>
 #include <apriltag/tag36h11.h>
 
+
+void draw_tag(cv::Mat& img, std::array<cv::Point2d, 4>& pt, uint16_t id)
+{
+	const cv::Scalar color_top(0, 255, 0);
+	const cv::Scalar color(255, 0, 0);
+	const int line_w = 1;
+	const int text_w = 2;
+	cv::line(img, pt[0], pt[1], color_top, line_w);
+	for (int j = 1; j < 4; ++j)
+		cv::line(img, pt[j], pt[(j + 1) & 3], color, line_w);
+	//
+	cv::circle(img, pt[0], line_w + 2, color_top, -1);
+	for (int j = 1; j < 4; ++j)
+		cv::circle(img, pt[j], line_w + 2, color, -1);
+	//
+	int fontface = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
+	double fontscale = 0.7;
+	int baseline;
+	std::string text = std::to_string(id);
+	cv::Point2d c = (pt[0] + pt[1]+ pt[2] + pt[3]) / 4;
+	cv::Size textsize = cv::getTextSize(text, fontface, fontscale, 2, &baseline);
+	cv::putText(img, text, cv::Point(c.x - textsize.width / 2, c.y + textsize.height / 2), fontface, fontscale, cv::Scalar(0, 0, 255), text_w);
+}
 
 class MayTag
 {
@@ -41,10 +65,10 @@ public:
 			std::cout << "Unrecognized tag family name (" << family << ")." << std::endl;
 	}
 
-	void detect(const cv::Mat& img)
+	void detect(const cv::Mat& frame)
 	{
 		cv::Mat gray;
-		cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
+		cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 		maytag::image_t gray_img(gray.cols, gray.rows, gray.data);
 
 		auto beg = std::chrono::steady_clock::now();
@@ -53,39 +77,19 @@ public:
 		auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(end - beg).count() * 1e-9;
 		std::cout << "MayTag   dt = " << dt << std::endl;
 
-		cv::Mat rgb = img.clone();
-		const cv::Scalar color_top(0, 255, 0);
-		const cv::Scalar color(255, 0, 0);
-		const int line_w = 1;
-		const int text_w = 1;
+		cv::Mat img = frame.clone();
+		std::array<cv::Point2d, 4> pt;
 		for (size_t i = 0; i < tags.size(); ++i)
 		{
 			const auto& tag = tags[i];
-			cv::Point2d pt[4];
 			for (int j = 0; j < 4; ++j)
 			{
 				pt[j].x = tag.p[j].x;
 				pt[j].y = tag.p[j].y;
 			}
-			//
-			cv::line(rgb, pt[0], pt[1], color_top, line_w);
-			for (int j = 1; j < 4; ++j)
-				cv::line(rgb, pt[j], pt[(j + 1) & 3], color, line_w);
-			//
-			cv::circle(rgb, pt[0], line_w + 2, color_top, -1);
-			for (int j = 1; j < 4; ++j)
-				cv::circle(rgb, pt[j], line_w + 2, color, -1);
-			//
-			int fontface = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
-			double fontscale = 0.7;
-			int baseline;
-			std::string text = std::to_string(tag.id);
-			cv::Point2d c = (pt[0] + pt[1]+ pt[2] + pt[3]) / 4;
-			cv::Size textsize = cv::getTextSize(text, fontface, fontscale, 2, &baseline);
-			cv::putText(rgb, text, cv::Point(c.x - textsize.width / 2, c.y + textsize.height / 2), fontface, fontscale, cv::Scalar(0, 0, 255), 2);
+			draw_tag(img, pt, tag.id);
 		}
-
-		cv::imshow("MayTag", rgb);
+		cv::imshow("MayTag", img);
 	}
 };
 
@@ -141,10 +145,10 @@ public:
 		}
 	}
 
-	void detect(const cv::Mat& img)
+	void detect(const cv::Mat& frane)
 	{
 		cv::Mat gray;
-		cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
+		cv::cvtColor(frane, gray, cv::COLOR_BGR2GRAY);
 		image_u8_t im = {
 			.width = gray.cols,
 			.height = gray.rows,
@@ -158,42 +162,20 @@ public:
 		auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(end - beg).count() * 1e-9;
 		std::cout << "AprilTag dt = " << dt << std::endl;
 
-		cv::Mat rgb = img.clone();
-		const cv::Scalar color_top(0, 255, 0);
-		const cv::Scalar color(255, 0, 0);
-		const int line_w = 1;
-		const int text_w = 1;
-		// Draw detection outlines
+		cv::Mat img = frane.clone();
+		std::array<cv::Point2d, 4> pt;
 		for (int i = 0; i < zarray_size(detections); i++)
 		{
 			apriltag_detection_t *det;
 			zarray_get(detections, i, &det);
-
-			cv::Point2d pt[4];
 			for (int j = 0; j < 4; ++j)
 			{
 				pt[j].x = det->p[j][0];
 				pt[j].y = det->p[j][1];
 			}
-			//
-			cv::line(rgb, pt[0], pt[1], color_top, line_w);
-			for (int j = 1; j < 4; ++j)
-				cv::line(rgb, pt[j], pt[(j + 1) & 3], color, line_w);
-			//
-			cv::circle(rgb, pt[0], line_w + 2, color_top, -1);
-			for (int j = 1; j < 4; ++j)
-				cv::circle(rgb, pt[j], line_w + 2, color, -1);
-			//
-			int fontface = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
-			double fontscale = 0.7;
-			int baseline;
-			std::string text = std::to_string(det->id);
-			cv::Point2d c = (pt[0] + pt[1]+ pt[2] + pt[3]) / 4;
-			cv::Size textsize = cv::getTextSize(text, fontface, fontscale, 2, &baseline);
-			cv::putText(rgb, text, cv::Point(c.x - textsize.width / 2, c.y + textsize.height / 2), fontface, fontscale, cv::Scalar(0, 0, 255), 2);
+			draw_tag(img, pt, det->id);
 		}
-		cv::imshow("AprilTag", rgb);
-
+		cv::imshow("AprilTag", img);
 		apriltag_detections_destroy(detections);
 	}
 };

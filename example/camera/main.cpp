@@ -1,3 +1,4 @@
+#include <array>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -13,38 +14,27 @@
 #include <maytag/tag36h11.h>
 
 
-void draw(cv::Mat& img, const std::vector<maytag::tag_t>& tags)
+void draw_tag(cv::Mat& img, std::array<cv::Point2d, 4>& pt, uint16_t id)
 {
 	const cv::Scalar color_top(0, 255, 0);
 	const cv::Scalar color(255, 0, 0);
 	const int line_w = 1;
-	const int text_w = 1;
-	for (size_t i = 0; i < tags.size(); ++i)
-	{
-		const auto& tag = tags[i];
-		cv::Point2d pt[4];
-		for (int j = 0; j < 4; ++j)
-		{
-			pt[j].x = tag.p[j].x;
-			pt[j].y = tag.p[j].y;
-		}
-		//
-		cv::line(img, pt[0], pt[1], color_top, line_w);
-		for (int j = 1; j < 4; ++j)
-			cv::line(img, pt[j], pt[(j + 1) & 3], color, line_w);
-		//
-		cv::circle(img, pt[0], line_w + 2, color_top, -1);
-		for (int j = 1; j < 4; ++j)
-			cv::circle(img, pt[j], line_w + 2, color, -1);
-		//
-		int fontface = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
-		double fontscale = 0.7;
-		int baseline;
-		std::string text = std::to_string(tag.id);
-		cv::Point2d c = (pt[0] + pt[1]+ pt[2] + pt[3]) / 4;
-		cv::Size textsize = cv::getTextSize(text, fontface, fontscale, 2, &baseline);
-		cv::putText(img, text, cv::Point(c.x - textsize.width / 2, c.y + textsize.height / 2), fontface, fontscale, cv::Scalar(0, 0, 255), 2);
-	}
+	const int text_w = 2;
+	cv::line(img, pt[0], pt[1], color_top, line_w);
+	for (int j = 1; j < 4; ++j)
+		cv::line(img, pt[j], pt[(j + 1) & 3], color, line_w);
+	//
+	cv::circle(img, pt[0], line_w + 2, color_top, -1);
+	for (int j = 1; j < 4; ++j)
+		cv::circle(img, pt[j], line_w + 2, color, -1);
+	//
+	int fontface = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
+	double fontscale = 0.7;
+	int baseline;
+	std::string text = std::to_string(id);
+	cv::Point2d c = (pt[0] + pt[1]+ pt[2] + pt[3]) / 4;
+	cv::Size textsize = cv::getTextSize(text, fontface, fontscale, 2, &baseline);
+	cv::putText(img, text, cv::Point(c.x - textsize.width / 2, c.y + textsize.height / 2), fontface, fontscale, cv::Scalar(0, 0, 255), text_w);
 }
 
 int main(int argc, char* argv[])
@@ -118,7 +108,19 @@ int main(int argc, char* argv[])
 		auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(end - beg).count() * 1e-9;
 		std::cout << "maytag dt = " << dt << std::endl;
 
-		draw(frame, tags);
+		// Draw all tags.
+		std::array<cv::Point2d, 4> pt;
+		for (size_t i = 0; i < tags.size(); ++i)
+		{
+			const auto& tag = tags[i];
+			for (int j = 0; j < 4; ++j)
+			{
+				pt[j].x = tag.p[j].x;
+				pt[j].y = tag.p[j].y;
+			}
+			draw_tag(frame, pt, tag.id);
+		}
+
 		cv::imshow("maytag", frame);
 		int key = cv::waitKey(1);
 		if (key == 27)
