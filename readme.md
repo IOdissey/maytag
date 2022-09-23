@@ -12,7 +12,7 @@ This is a fully reworked version of of the [AprilRobotics/apriltag](https://gith
 * other fixes and possible new bugs :)
 
 
-# Example
+# Examples
 * [generator](example/generator) - tag image generator
 * [camera](example/camera) - demonstrates MayTag work on data from the camera
 * [apriltag](example/apriltag) - simultaneous work MayTag and original AprilTag on data from the camera
