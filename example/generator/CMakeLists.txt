@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(maytag-apriltag)
+project(maytag-generator)
 
 if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "Release")
@@ -11,9 +11,9 @@ add_executable(${PROJECT_NAME} main.cpp)
 
 include_directories("../../include")
 
+# Filesystem.
+target_link_libraries(${PROJECT_NAME} stdc++fs)
+
 find_package(OpenCV 4 REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
-
-find_package(apriltag REQUIRED)
-target_link_libraries(${PROJECT_NAME} apriltag::apriltag)

@@ -126,6 +126,12 @@ namespace maytag
 			_cfg.refine_edges = refine_edges;
 		}
 
+		//
+		void set_min_score(double min_score)
+		{
+			_cfg.min_score = min_score;
+		}
+
 		// dict_size_scale - specifies the size of the dictionary.
 		// The larger the value, the larger the size but the faster the search.
 		// For the change to take effect, you must install before call add_family.

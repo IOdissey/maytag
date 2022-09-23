@@ -16,7 +16,7 @@ namespace maytag::_
 		uint32_t quad_decimate_type = 1;
 		double quad_decimate = 1.0;
 		// 
-		uint32_t tile_size = 4;
+		uint32_t tile_size = 4;         // min value = 2
 		uint8_t min_wb_diff = 40;
 		//
 		uint32_t min_contour_size = 24;
@@ -33,6 +33,7 @@ namespace maytag::_
 		// How much sharpening should be done to decoded images?
 		// This can help decode small tags but may or may not help in odd lighting conditions or low light conditions.
 		double decode_sharpening = 0.25;
+		double min_score = 20.0;
 
 		uint8_t border_mask = 0;
 		uint32_t max_total_width = 0;

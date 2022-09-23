@@ -295,6 +295,8 @@ namespace maytag::_
 			if (white_score_count == 0 || black_score_count == 0)
 				return std::numeric_limits<uint64_t>::max();
 			score = std::min(white_score / white_score_count, black_score / black_score_count);
+			if (score < _cfg->min_score)
+				return std::numeric_limits<uint64_t>::max();
 			return code;
 		}
 

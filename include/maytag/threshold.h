@@ -47,10 +47,14 @@ namespace maytag::_
 				_size = s;
 				if (_ptr)
 					delete[] _ptr;
+				// If tile_size >= 2 then s >= 4 * ts.
 				const uint32_t ts = tw * th;
-				_ptr = new uint8_t[s + 2 * ts];
-				_img_min = _ptr + s;
-				_img_max = _img_min + ts;
+				// Memory usage:
+				// |             tresh_img             |
+				// | - img_min_tmp img_max_tmp img_min | img_max |
+				_ptr = new uint8_t[s + ts];
+				_img_max = _ptr + s;
+				_img_min = _img_max - ts;
 				_img_max_tmp = _img_min - ts;
 				_img_min_tmp = _img_max_tmp - ts;
 			}
@@ -108,7 +112,8 @@ namespace maytag::_
 					_img_max_tmp[t] = max;
 				}
 			}
-			// Apply 3x1 min/max convolution.
+			// Apply 3x1 min/max convolution and save threshold for each tiles.
+			const uint8_t min_wb_diff = _cfg->min_wb_diff;
 			for (uint32_t ty = 0, t = 0; ty < th; ++ty)
 			{
 				for (uint32_t tx = 0; tx < tw; ++tx, ++t)
@@ -133,23 +138,27 @@ namespace maytag::_
 						if (v_max > max)
 							max = v_max;
 					}
-					_img_min[t] = min;
-					_img_max[t] = max;
+					// Save threshold for each tiles.
+					const uint8_t d = max - min;
+					if (d <= min_wb_diff)
+						_img_max[t] = 0;
+					else
+						_img_max[t] = min + (d >> 1);
 				}
 			}
 			// Calculate binary image.
-			const uint8_t min_wb_diff = _cfg->min_wb_diff;
 			std::memset(_ptr, 2, s);
+			const uint32_t dy_end_ext = tile_size + h - th * tile_size;
+			const uint32_t dx_end_ext = tile_size + w - tw * tile_size;
 			for (uint32_t ty = 0, t = 0; ty < th; ++ty)
 			{
-				const uint32_t dy_end = (ty == ty_end) ? (tile_size + h - th * tile_size) : tile_size;
 				for (uint32_t tx = 0; tx < tw; ++tx, ++t)
 				{
-					const uint8_t d = _img_max[t] - _img_min[t];
-					if (d <= min_wb_diff)
+					const uint8_t thresh = _img_max[t];
+					if (thresh == 0)
 						continue;
-					const uint32_t dx_end = (tx == tx_end) ? (tile_size + w - tw * tile_size) : tile_size;
-					const uint8_t thresh = _img_min[t] + d / 2;
+					const uint32_t dy_end = (ty == ty_end) ? dy_end_ext : tile_size;
+					const uint32_t dx_end = (tx == tx_end) ? dx_end_ext : tile_size;
 					const uint32_t p = (ty * w + tx) * tile_size;
 					for (uint32_t dy = 0; dy < dy_end; ++dy)
 					{

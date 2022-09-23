@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+
 namespace maytag::_
 {
 	// Computes the cholesky factorization of a, putting the lower triangular matrix into r.

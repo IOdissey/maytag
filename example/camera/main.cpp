@@ -40,7 +40,7 @@ void draw_tag(cv::Mat& img, std::array<cv::Point2d, 4>& pt, uint16_t id)
 int main(int argc, char* argv[])
 {
 	const std::string keys =
-		"{h help     |         | print this message}"
+		"{h help     |         | help}"
 		"{d device   | 0       | camera device number}"
 		"{iw width   | 0       | image width}"
 		"{ih height  | 0       | image height}"
@@ -49,14 +49,15 @@ int main(int argc, char* argv[])
 		"{ha hamming | 1       | How many errors corrected?}"
 		"{x decimate | 1.0     | decimate input image by this factor}"
 		"{r refine   | 1       | spend more time trying to align edges of tags}";
+
 	cv::CommandLineParser parser(argc, argv, keys);
+
 	if (parser.has("help"))
 	{
+		std::cout << "OpenCV: " << CV_VERSION << std::endl;
 		parser.printMessage();
 		return 0;
 	}
-
-	std::cout << "OpenCV: " << CV_VERSION << std::endl;
 
 	const int arg_device = parser.get<int>("device");
 	cv::VideoCapture cap(arg_device);
