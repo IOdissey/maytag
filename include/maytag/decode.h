@@ -247,24 +247,29 @@ namespace maytag::_
 				int yi = static_cast<int>(py);
 				if (xi < 0 || yi < 0 || xi >= w - 1 || yi >= h - 1)
 					continue;
-				px -= xi;
-				py -= yi;
-				uint32_t p = yi * w + xi;
-				uint8_t i00 = img[p];
-				uint8_t i10 = img[p + 1];
-				uint8_t i01 = img[p + w];
-				uint8_t i11 = img[p + w + 1];
-				double w11 = px * py;
-				double w10 = px - w11;
-				double w01 = py - w11;
-				double w00 = 1.0 + w11 - px - py;
-				double v = i00 * w00 + i10 * w10 + i01 * w01 + i11 * w11;
-				double thresh = 0.5 * (black_model.interpolate(tx, ty) + white_model.interpolate(tx, ty));
-				if (family.black)
-					v = v - thresh;
+				double v = 0.5 * (black_model.interpolate(tx, ty) + white_model.interpolate(tx, ty));
+				const uint32_t p = yi * w + xi;
+				if (_cfg->interpolate)
+				{
+					px -= xi;
+					py -= yi;
+					uint8_t i00 = img[p];
+					uint8_t i10 = img[p + 1];
+					uint8_t i01 = img[p + w];
+					uint8_t i11 = img[p + w + 1];
+					double w11 = px * py;
+					double w10 = px - w11;
+					double w01 = py - w11;
+					double w00 = 1.0 + w11 - px - py;
+					v -= i00 * w00 + i10 * w10 + i01 * w01 + i11 * w11;
+				}
 				else
-					v = thresh - v;
-				_val[beg_coord + family.total_width * bit_y + bit_x] = v;
+					v -= img[p];
+				const uint32_t idx = beg_coord + family.total_width * bit_y + bit_x;
+				if (family.black)
+					_val[idx] = -v;
+				else
+					_val[idx] = v;
 			}
 			// Sharpen.
 			_sharpen(family.total_width);

@@ -132,6 +132,12 @@ namespace maytag
 			_cfg.min_score = min_score;
 		}
 
+		//
+		void set_interpolate(bool interpolate)
+		{
+			_cfg.interpolate = interpolate;
+		}
+
 		// dict_size_scale - specifies the size of the dictionary.
 		// The larger the value, the larger the size but the faster the search.
 		// For the change to take effect, you must install before call add_family.

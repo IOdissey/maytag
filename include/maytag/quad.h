@@ -336,8 +336,8 @@ namespace maytag::_
 			std::vector<double> errs(size);
 			{
 				const uint32_t ksz_max = 20;
-				// min_contour_size >= 24 => ksz >= 2
-				const uint32_t ksz = std::min(ksz_max, size / 12);
+				// min_contour_size >= 24 => ksz >= 1
+				const uint32_t ksz = std::min(ksz_max, size / 24);
 				line_param_t lp;
 				for (uint32_t i = 0; i < size; ++i)
 					_fit_line_mse((i + size - ksz) % size, (i + ksz) % size, errs[i], lp);
