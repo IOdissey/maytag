@@ -16,7 +16,7 @@ namespace maytag::_
 		uint16_t y;
 		int8_t gx;
 		int8_t gy;
-		int16_t order;
+		uint16_t order;
 
 		cpt_t(uint16_t x, uint16_t y, int8_t gx, int8_t gy):
 			x(x), y(y), gx(gx), gy(gy)

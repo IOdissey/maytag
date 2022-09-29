@@ -4,7 +4,19 @@ Tag image generator.
 
 
 # Requirements
-* OpenCV
+
+* [OpenCV](https://github.com/opencv/opencv)
+
+
+# Build
+
+Standard cmake build.
+```
+mkdir build
+cd build
+cmake <path to CMakeLists.txt>
+make
+```
 
 
 # Usage

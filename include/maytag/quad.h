@@ -155,21 +155,20 @@ namespace maytag::_
 					++dot;
 				else
 					--dot;
-				// Calculate the order (from 0 to 32 000) of points.
-				double order;
+				// Calculate the order (from 0 to 64 000) of points.
 				// Right or left.
 				if (std::abs(dx) > std::abs(dy))
 				{
-					// Right order: 4000 * [0.0, 2.0].
+					// Right order: 8000 * [0.0, 2.0].
 					if (dx > eps)
 					{
-						p.order = static_cast<int16_t>(4000 * (1.0 - dy / dx));
+						p.order = static_cast<uint16_t>(8000 * (1.0 - dy / dx));
 						mask |= 1;
 					}
-					// Left order: 4000 * [4.0, 6.0].
+					// Left order: 8000 * [4.0, 6.0].
 					else if (dx < -eps)
 					{
-						p.order = static_cast<int16_t>(4000 * (5.0 - dy / dx));
+						p.order = static_cast<uint16_t>(8000 * (5.0 - dy / dx));
 						mask |= 2;
 					}
 					else
@@ -178,16 +177,16 @@ namespace maytag::_
 				// Top or bottom.
 				else
 				{
-					// Top order: 4000 * [2.0, 4.0].
+					// Top order: 8000 * [2.0, 4.0].
 					if (dy < -eps)
 					{
-						p.order = static_cast<int16_t>(4000 * (3.0 + dx / dy));
+						p.order = static_cast<uint16_t>(8000 * (3.0 + dx / dy));
 						mask |= 4;
 					}
-					// Bottom order: 4000 * [6.0, 8.0].
+					// Bottom order: 8000 * [6.0, 8.0].
 					else if (dy > eps)
 					{
-						p.order = static_cast<int16_t>(4000 * (7.0 + dx / dy));
+						p.order = static_cast<uint16_t>(8000 * (7.0 + dx / dy));
 						mask |= 8;
 					}
 					else
@@ -204,14 +203,14 @@ namespace maytag::_
 			if ((_cfg->border_mask & border_mask) == 0)
 				return false;
 			quad.black = black;
-			// quad.p[0].x = x_min * quad_decimate;
-			// quad.p[0].y = y_min * quad_decimate;
-			// quad.p[1].x = x_max * quad_decimate;
-			// quad.p[1].y = y_min * quad_decimate;
-			// quad.p[2].x = x_max * quad_decimate;
-			// quad.p[2].y = y_max * quad_decimate;
-			// quad.p[3].x = x_min * quad_decimate;
-			// quad.p[3].y = y_max * quad_decimate;
+			quad.p[0].x = x_min * quad_decimate;
+			quad.p[0].y = y_min * quad_decimate;
+			quad.p[1].x = x_max * quad_decimate;
+			quad.p[1].y = y_min * quad_decimate;
+			quad.p[2].x = x_max * quad_decimate;
+			quad.p[2].y = y_max * quad_decimate;
+			quad.p[3].x = x_min * quad_decimate;
+			quad.p[3].y = y_max * quad_decimate;
 			//
 			std::sort(contour.begin(), contour.end(), [](const auto& a, const auto& b) {
 				return a.order < b.order;
@@ -291,32 +290,53 @@ namespace maytag::_
 			return true;
 		}
 
-		//
 		void _prepare_fit_data(const image_t& gray_img, const std::vector<cpt_t>& contour)
 		{
 			const double quad_decimate = _cfg->quad_decimate;
 			const uint32_t size = contour.size();
 			const uint8_t* const img = gray_img.d;
-			const uint32_t s = gray_img.w;
-			const uint32_t ix_max = gray_img.w - 1;
-			const uint32_t iy_max = gray_img.h - 1;
+			const uint32_t iw = gray_img.w;
+			const uint32_t ih = gray_img.h;
 			_fit_data.clear();
 			_fit_data.reserve(size);
 			fit_data_t sum;
 			for (uint32_t i = 0; i < size; ++i)
 			{
 				const auto& p = contour[i];
-				const double x = (p.x - 0.5) * quad_decimate;
-				const double y = (p.y - 0.5) * quad_decimate;
+				const double x = p.x * quad_decimate;
+				const double y = p.y * quad_decimate;
 				double w = 1.0;
 				uint32_t ix = static_cast<uint32_t>(x + 0.5);
 				uint32_t iy = static_cast<uint32_t>(y + 0.5);
-				if (ix > 0 && iy > 0 && ix < ix_max && iy < iy_max)
+				if (ix > 0 && iy > 0 && ix < iw && iy < ih)
 				{
-					const uint32_t p = iy * s + ix;
-					const double gx = img[p + 1] - img[p - 1];
-					const double gy = img[p + s] - img[p - s];
-					w += std::sqrt(gx * gx + gy * gy);
+					//  3 | 2
+					// ---+---
+					//  1 | 0
+					const uint32_t p = iy * iw + ix;
+					// 0
+					uint8_t v = img[p];
+					uint8_t i_min = v;
+					uint8_t i_max = v;
+					// 1
+					v = img[p - 1];
+					if (v < i_min)
+						i_min = v;
+					else if (v > i_max)
+						i_max = v;
+					// 2
+					v = img[p - iw];
+					if (v < i_min)
+						i_min = v;
+					else if (v > i_max)
+						i_max = v;
+					// 3
+					v = img[p - iw - 1];
+					if (v < i_min)
+						i_min = v;
+					else if (v > i_max)
+						i_max = v;
+					w += i_max - i_min;
 				}
 				//
 				sum.w += w;
@@ -332,67 +352,71 @@ namespace maytag::_
 		bool _find_quad(quad_t& quad) const
 		{
 			const uint32_t size = _fit_data.size();
+			std::vector<double> err1(size);
+			std::vector<double> err2(size);
 			// Collect errors.
-			std::vector<double> errs(size);
+			// err1
 			{
-				const uint32_t ksz_max = 20;
 				// min_contour_size >= 24 => ksz >= 1
-				const uint32_t ksz = std::min(ksz_max, size / 24);
+				const uint32_t ksz = std::min(static_cast<uint32_t>(20), size / 24);
 				line_param_t lp;
 				for (uint32_t i = 0; i < size; ++i)
-					_fit_line_mse((i + size - ksz) % size, (i + ksz) % size, errs[i], lp);
+					_fit_line_mse((i + size - ksz) % size, (i + ksz) % size, err1[i], lp);
 			}
 			// Filtering errors.
+			// err2 = filter(err1)
 			{
-				const uint32_t _f_size = _filter.size();
-				std::vector<double> errs_filter(size);
+				const uint32_t f_size = _filter.size();
+				if (size < f_size)
+					return false;
+				const uint32_t beg = size - f_size / 2;
 				for (uint32_t i = 0; i < size; i++)
 				{
 					double acc = 0.0;
-					for (uint32_t f = 0; f < _f_size; ++f)
-						acc += _filter[f] * errs[(size + i + f - _f_size / 2) % size];
-					errs_filter[i] = acc;
+					for (uint32_t f = 0, j = beg + i; f < f_size; ++f, ++j)
+						acc += _filter[f] * err1[j % size];
+					err2[i] = acc;
 				}
-				errs.swap(errs_filter);
 			}
 			// Find maxima.
+			// err1 = maxima(err2)
 			std::vector<uint32_t> maxima;
-			std::vector<double> maxima_errs;
 			{
+				const double min_err = 0.01;
+				err1.clear();
 				maxima.reserve(size / 6);
-				maxima_errs.reserve(size / 6);
-				if (errs[0] > 0.1 && errs[0] > errs[size - 1] && errs[0] > errs[1])
+				if (err2[0] > min_err && err2[0] > err2[size - 1] && err2[0] > err2[1])
 				{
 					maxima.emplace_back(0);
-					maxima_errs.emplace_back(errs[0]);
+					err1.emplace_back(err2[0]);
 				}
 				for (uint32_t i = 1; i < size - 1; i++)
 				{
-					if (errs[i] > 0.1 && errs[i] > errs[i - 1] && errs[i] > errs[i + 1])
+					if (err2[i] > min_err && err2[i] > err2[i - 1] && err2[i] > err2[i + 1])
 					{
 						maxima.emplace_back(i);
-						maxima_errs.emplace_back(errs[i]);
+						err1.emplace_back(err2[i]);
 					}
 				}
-				if (errs[size - 1] > 0.1 && errs[size - 1] > errs[size - 2] && errs[size - 1] > errs[0])
+				if (err2[size - 1] > min_err && err2[size - 1] > err2[size - 2] && err2[size - 1] > err2[0])
 				{
 					maxima.emplace_back(size - 1);
-					maxima_errs.emplace_back(errs[size - 1]);
+					err1.emplace_back(err2[size - 1]);
 				}
 			}
 			uint32_t maxima_size = maxima.size();
 			if (maxima_size < 4)
 				return false;
-			// Get best _max_nmaxima.
+			// Get best max_nmaxima.
 			if (maxima_size > _cfg->max_nmaxima)
 			{
-				std::vector<double> maxima_tmp = maxima_errs;
-				std::nth_element(maxima_tmp.begin(), maxima_tmp.begin() + _cfg->max_nmaxima, maxima_tmp.end(), std::greater<double>());
-				const double tresh = maxima_tmp[_cfg->max_nmaxima];
+				err2 = err1;
+				std::nth_element(err2.begin(), err2.begin() + _cfg->max_nmaxima, err2.end(), std::greater<double>());
+				const double tresh = err2[_cfg->max_nmaxima];
 				const uint32_t i_max = maxima_size;
 				for (uint32_t i = 0, maxima_size = 0; i < i_max; ++i)
 				{
-					if (maxima_errs[i] > tresh)
+					if (err1[i] > tresh)
 						maxima[maxima_size++] = maxima[i];
 				}
 			}
@@ -505,6 +529,9 @@ namespace maytag::_
 				// We shouldn't ever have to search more than quad_decimate, since otherwise we would (ideally) have started our search on another pixel in the first place.
 				// Likewise, for very small tags, we don't want the range to be too big.
 				const double range = _cfg->quad_decimate + 1.0;
+				// How far +/- to look?
+				// Small values compute the gradient more precisely, but are more sensitive to noise.
+				const double grange = _cfg->grange;
 				// Stats for fitting a line.
 				fit_data_t sum;
 				for (uint32_t s = 0; s < nsamples; ++s)
@@ -512,8 +539,8 @@ namespace maytag::_
 					// Compute a point along the line.
 					// Note, we're avoiding sampling *right* at the corners, since those points are the least reliable.
 					const double alpha = (1.0 + s) / (nsamples + 1);
-					const double x0 = alpha * pa.x + (1 - alpha) * pb.x;
-					const double y0 = alpha * pa.y + (1 - alpha) * pb.y;
+					const double x0 = alpha * pa.x + (1.0 - alpha) * pb.x;
+					const double y0 = alpha * pa.y + (1.0 - alpha) * pb.y;
 					// Search along the normal to this line, looking at the gradients along the way.
 					// We're looking for a strong response.
 					// Because of the guaranteed winding order of the points in the quad, we will start inside the white portion of the quad and work our way outward.
@@ -522,15 +549,12 @@ namespace maytag::_
 					for (double n = -range; n <= range; n += 0.25)
 					{
 						// Sample to points (x1,y1) and (x2,y2).
-						// How far +/- to look?
-						// Small values compute the gradient more precisely, but are more sensitive to noise.
-						const double grange = 1.0;
-						int x1 = x0 + (n + grange) * nx;
-						int y1 = y0 + (n + grange) * ny;
+						int x1 = static_cast<int>(x0 + (n + grange) * nx);
+						int y1 = static_cast<int>(y0 + (n + grange) * ny);
 						if (x1 < 0 || x1 >= w || y1 < 0 || y1 >= h)
 							continue;
-						int x2 = x0 + (n - grange) * nx;
-						int y2 = y0 + (n - grange) * ny;
+						int x2 = static_cast<int>(x0 + (n - grange) * nx);
+						int y2 = static_cast<int>(y0 + (n - grange) * ny);
 						if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h)
 							continue;
 						uint8_t g1 = img[y1 * w + x1];
@@ -539,10 +563,10 @@ namespace maytag::_
 						// They can only hurt us.
 						if (g1 < g2)
 							continue;
-						double dg = g2 - g1;
+						double dg = g1 - g2;
 						// What shape for weight=f(g2-g1)?
 						double weight = dg * dg;
-						// compute weighted average of the gradient at this point.
+						// Compute weighted average of the gradient at this point.
 						wn_sum += weight * n;
 						w_sum += weight;
 					}

@@ -42,13 +42,13 @@ int main(int argc, char* argv[])
 	const std::string keys =
 		"{h help     |         | help}"
 		"{d device   | 0       | camera device number}"
-		"{iw width   | 0       | image width}"
-		"{ih height  | 0       | image height}"
-		"{f family   | tag16h5 | tag family to use (tag16h5, tag25h9, tag36h10, tag36h11)}"
-		"{b black    | 1       | tag color (1 - black, 0 - white)}"
-		"{ha hamming | 1       | How many errors corrected?}"
-		"{x decimate | 1.0     | decimate input image by this factor}"
-		"{r refine   | 1       | spend more time trying to align edges of tags}";
+		"{iw width   | 0       | image width (optionaly)}"
+		"{ih height  | 0       | image height (optionaly)}"
+		"{f family   | tag16h5 | tag family: tag16h5, tag25h9, tag36h10, tag36h11}"
+		"{b black    | 1       | tag color: 1 - black, 0 - white}"
+		"{ha hamming | 1       | number of error correction bits (hamming distance)}"
+		"{x decimate | 1.0     | decimate input image by this factor (supported 1, 1.5, 2, 3, ...)}"
+		"{r refine   | 1       | spend more time trying to align edges of tags: 1 - on, 0 - off}";
 
 	cv::CommandLineParser parser(argc, argv, keys);
 

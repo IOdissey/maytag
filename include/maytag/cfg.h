@@ -29,12 +29,13 @@ namespace maytag::_
 		double max_line_fit_mse = 2.0;
 		uint32_t max_nmaxima = 10;
 		bool refine_edges = true;
+		double grange = 0.5;            // 
 
 		// How much sharpening should be done to decoded images?
 		// This can help decode small tags but may or may not help in odd lighting conditions or low light conditions.
 		double decode_sharpening = 0.25;
 		double min_score = 20.0;
-		bool interpolate = false;
+		bool interpolate = true;
 
 		uint8_t border_mask = 0;
 		uint32_t max_total_width = 0;

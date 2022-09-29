@@ -164,58 +164,47 @@ namespace maytag::_
 		// This sampling is achieved by considering a set of samples along lines.
 		uint64_t _quad_code(const quad_t& quad, const tag_family_t& family, const image_t& gray_img, double& score)
 		{
+			const uint32_t wb = family.width_at_border;
+			const uint32_t tw = family.total_width;
+			const uint32_t nbits = family.nbits;
 			// Tag coordinates in range [0, 1].
 			// Tag bit size.
-			const double d_full = 1.0 / family.width_at_border;
+			const double d_full = 1.0 / wb;
 			// Tag bit falf size.
 			const double d_half = 0.5 * d_full;
 			//
 			graymodel_t white_model;
 			graymodel_t black_model;
-			// Left and right white columns.
+			// Left, right, top and bottom white columns.
 			{
-				const double dx_l = -d_half;
-				const double dx_r = 1.0 + d_half;
-				double dy = d_half;
-				for (uint32_t i = 0; i < family.width_at_border; ++i, dy += d_full)
+				const double d1 = -d_half;
+				const double d2 = 1.0 + d_half;
+				double d = d_half;
+				for (uint32_t i = 0; i < wb; ++i, d += d_full)
 				{
-					_add_model(gray_img, white_model, dx_l, dy);
-					_add_model(gray_img, white_model, dx_r, dy);
+					_add_model(gray_img, white_model, d1, d);
+					_add_model(gray_img, white_model, d2, d);
+					_add_model(gray_img, white_model, d, d1);
+					_add_model(gray_img, white_model, d, d2);
 				}
 			}
-			// Top and bottom white rows.
+			// Left, right, top and bottom black columns.
 			{
-				const double dy_t = -d_half;
-				const double dy_b = 1.0 + d_half;
-				double dx = d_half;
-				for (uint32_t i = 0; i < family.width_at_border; ++i, dx += d_full)
+				const double d1 = d_half;
+				const double d2 = 1.0 - d_half;
+				double d = d_half + d_full;
+				for (uint32_t i = 2; i < wb; ++i, d += d_full)
 				{
-					_add_model(gray_img, white_model, dx, dy_t);
-					_add_model(gray_img, white_model, dx, dy_b);
+					_add_model(gray_img, black_model, d1, d);
+					_add_model(gray_img, black_model, d2, d);
+					_add_model(gray_img, black_model, d, d1);
+					_add_model(gray_img, black_model, d, d2);
 				}
-			}
-			// Left and right black columns.
-			{
-				const double dx_l = d_half;
-				const double dx_r = 1.0 - d_half;
-				double dy = d_half;
-				for (uint32_t i = 0; i < family.width_at_border; ++i, dy += d_full)
-				{
-					_add_model(gray_img, black_model, dx_l, dy);
-					_add_model(gray_img, black_model, dx_r, dy);
-				}
-			}
-			// Top and bottom black rows.
-			{
-				const double dy_t = d_half;
-				const double dy_b = 1.0 - d_half;
-				double dx = d_half + d_full;
-				// Two bits less since it were counted in columns.
-				for (uint32_t i = 2; i < family.width_at_border; ++i, dx += d_full)
-				{
-					_add_model(gray_img, black_model, dx, dy_t);
-					_add_model(gray_img, black_model, dx, dy_b);
-				}
+				// Corners.
+				_add_model(gray_img, black_model, d1, d1);
+				_add_model(gray_img, black_model, d1, d2);
+				_add_model(gray_img, black_model, d2, d1);
+				_add_model(gray_img, black_model, d2, d2);
 			}
 			//
 			white_model.solve();
@@ -229,12 +218,12 @@ namespace maytag::_
 			else if (!family.black)
 				return std::numeric_limits<uint64_t>::max();
 			//
-			std::memset(_val, 0, family.total_width * family.total_width * sizeof(double));
-			const uint32_t beg_coord = (family.total_width + 1) * (family.total_width - family.width_at_border) / 2;
+			std::memset(_val, 0, tw * tw * sizeof(double));
+			const uint32_t beg_coord = (tw + 1) * (tw - wb) / 2;
 			const uint8_t* const img = gray_img.d;
 			const uint32_t w = gray_img.w;
 			const uint32_t h = gray_img.h;
-			for (uint32_t i = 0; i < family.nbits; ++i)
+			for (uint32_t i = 0; i < nbits; ++i)
 			{
 				uint32_t bit_x = family.bit_x[i];
 				uint32_t bit_y = family.bit_y[i];
@@ -243,14 +232,16 @@ namespace maytag::_
 				double px, py;
 				_homography_project(_h, tx, ty, px, py);
 				// Interpolate.
-				int xi = static_cast<int>(px);
-				int yi = static_cast<int>(py);
-				if (xi < 0 || yi < 0 || xi >= w - 1 || yi >= h - 1)
-					continue;
 				double v = 0.5 * (black_model.interpolate(tx, ty) + white_model.interpolate(tx, ty));
-				const uint32_t p = yi * w + xi;
 				if (_cfg->interpolate)
 				{
+					px -= 0.5;
+					py -= 0.5;
+					int xi = static_cast<int>(px);
+					int yi = static_cast<int>(py);
+					if (xi < 0 || yi < 0 || xi >= w - 1 || yi >= h - 1)
+						continue;
+					const uint32_t p = yi * w + xi;
 					px -= xi;
 					py -= yi;
 					uint8_t i00 = img[p];
@@ -264,8 +255,15 @@ namespace maytag::_
 					v -= i00 * w00 + i10 * w10 + i01 * w01 + i11 * w11;
 				}
 				else
+				{
+					int xi = static_cast<int>(px);
+					int yi = static_cast<int>(py);
+					if (xi < 0 || yi < 0 || xi >= w || yi >= h)
+						continue;
+					const uint32_t p = yi * w + xi;
 					v -= img[p];
-				const uint32_t idx = beg_coord + family.total_width * bit_y + bit_x;
+				}
+				const uint32_t idx = beg_coord + tw * bit_y + bit_x;
 				if (family.black)
 					_val[idx] = -v;
 				else
