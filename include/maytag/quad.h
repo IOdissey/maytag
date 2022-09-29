@@ -539,8 +539,8 @@ namespace maytag::_
 					// Compute a point along the line.
 					// Note, we're avoiding sampling *right* at the corners, since those points are the least reliable.
 					const double alpha = (1.0 + s) / (nsamples + 1);
-					const double x0 = alpha * pa.x + (1.0 - alpha) * pb.x;
-					const double y0 = alpha * pa.y + (1.0 - alpha) * pb.y;
+					const double x0 = pb.x + alpha * (pa.x - pb.x);
+					const double y0 = pb.y + alpha * (pa.y - pb.y);
 					// Search along the normal to this line, looking at the gradients along the way.
 					// We're looking for a strong response.
 					// Because of the guaranteed winding order of the points in the quad, we will start inside the white portion of the quad and work our way outward.

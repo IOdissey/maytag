@@ -270,19 +270,19 @@ namespace maytag::_
 					_val[idx] = v;
 			}
 			// Sharpen.
-			_sharpen(family.total_width);
+			_sharpen(tw);
 			//
 			double black_score = 0.0;
 			double white_score = 0.0;
-			uint32_t black_score_count = 1;
-			uint32_t white_score_count = 1;
+			uint32_t black_score_count = 0;
+			uint32_t white_score_count = 0;
 			uint64_t code = 0;
 			for (uint32_t i = 0; i < family.nbits; ++i)
 			{
 				code <<= 1;
 				uint32_t bit_x = family.bit_x[i];
 				uint32_t bit_y = family.bit_y[i];
-				double v = _val[beg_coord + family.total_width * bit_y + bit_x];
+				double v = _val[beg_coord + tw * bit_y + bit_x];
 				if (v > 0)
 				{
 					white_score += v;
