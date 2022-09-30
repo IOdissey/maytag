@@ -203,14 +203,14 @@ namespace maytag::_
 			if ((_cfg->border_mask & border_mask) == 0)
 				return false;
 			quad.black = black;
-			quad.p[0].x = x_min * quad_decimate;
-			quad.p[0].y = y_min * quad_decimate;
-			quad.p[1].x = x_max * quad_decimate;
-			quad.p[1].y = y_min * quad_decimate;
-			quad.p[2].x = x_max * quad_decimate;
-			quad.p[2].y = y_max * quad_decimate;
-			quad.p[3].x = x_min * quad_decimate;
-			quad.p[3].y = y_max * quad_decimate;
+			// quad.p[0].x = x_min * quad_decimate;
+			// quad.p[0].y = y_min * quad_decimate;
+			// quad.p[1].x = x_max * quad_decimate;
+			// quad.p[1].y = y_min * quad_decimate;
+			// quad.p[2].x = x_max * quad_decimate;
+			// quad.p[2].y = y_max * quad_decimate;
+			// quad.p[3].x = x_min * quad_decimate;
+			// quad.p[3].y = y_max * quad_decimate;
 			//
 			std::sort(contour.begin(), contour.end(), [](const auto& a, const auto& b) {
 				return a.order < b.order;

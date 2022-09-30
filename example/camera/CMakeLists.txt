@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
+
 project(maytag-camera)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -9,8 +10,10 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
+#
 include_directories("../../include")
 
+# OpenCV.
 find_package(OpenCV 4)
 if(NOT OpenCV_FOUND)
 	find_package(OpenCV 3 REQUIRED)

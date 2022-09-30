@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
+
 project(maytag-generator)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -6,16 +7,16 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_CXX_STANDARD 14)
-SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
-SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION ASC)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
+#
 include_directories("../../include")
 
 # Filesystem.
 target_link_libraries(${PROJECT_NAME} stdc++fs)
 
+# OpenCV.
 find_package(OpenCV 4)
 if(NOT OpenCV_FOUND)
 	find_package(OpenCV 3 REQUIRED)
