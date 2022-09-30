@@ -5,13 +5,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include <maytag/detector.h>
-#include <maytag/image.h>
-#include <maytag/tag.h>
-#include <maytag/tag16h5.h>
-#include <maytag/tag25h9.h>
-#include <maytag/tag36h10.h>
-#include <maytag/tag36h11.h>
+#include <maytag/maytag.h>
 
 #include <apriltag/apriltag.h>
 #include <apriltag/tag16h5.h>

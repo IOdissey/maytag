@@ -4,11 +4,8 @@
 
 #include <opencv2/opencv.hpp>
 
-#include <maytag/tag_family.h>
-#include <maytag/tag16h5.h>
-#include <maytag/tag25h9.h>
-#include <maytag/tag36h10.h>
-#include <maytag/tag36h11.h>
+#include <maytag/maytag.h>
+
 
 namespace fs = std::experimental::filesystem;
 
