@@ -144,6 +144,8 @@ namespace maytag::_
 			_mask(((uint64_t)1 << family.nbits) - 1)
 		{
 			_max_hamming = family.hamming;
+			if (_max_hamming > 3)
+				_max_hamming = 3;
 			_create(size_scale);
 			_print_stat("created");
 		}
@@ -155,6 +157,8 @@ namespace maytag::_
 
 		void update_hamming(uint8_t hamming, double size_scale = 2.0)
 		{
+			if (hamming > 3)
+				hamming = 3;
 			if (hamming <= _max_hamming)
 				return;
 			_max_hamming = hamming;
