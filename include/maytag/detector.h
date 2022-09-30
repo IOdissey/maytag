@@ -127,6 +127,20 @@ namespace maytag
 		}
 
 		//
+		void set_grange(double grange)
+		{
+			if (grange > 1.0)
+				grange = 1.0;
+			_cfg.grange = grange;
+		}
+
+		//
+		void set_decode_sharpening(double decode_sharpening)
+		{
+			_cfg.decode_sharpening = decode_sharpening;
+		}
+
+		//
 		void set_min_score(double min_score)
 		{
 			_cfg.min_score = min_score;
