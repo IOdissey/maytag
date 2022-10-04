@@ -64,11 +64,14 @@ namespace maytag::_
 
 		bool _calc_homography(const quad_t& quad)
 		{
+			// 3---2
+			// | + |
+			// 0---1
 			const double c[4][4] = {
-				{0.0, 0.0, quad.p[0].x, quad.p[0].y},
-				{0.0, 1.0, quad.p[1].x, quad.p[1].y},
-				{1.0, 1.0, quad.p[2].x, quad.p[2].y},
-				{1.0, 0.0, quad.p[3].x, quad.p[3].y}
+				{0.0, 0.0, quad.p[3].x, quad.p[3].y},
+				{0.0, 1.0, quad.p[0].x, quad.p[0].y},
+				{1.0, 1.0, quad.p[1].x, quad.p[1].y},
+				{1.0, 0.0, quad.p[2].x, quad.p[2].y}
 			};
 			double a[] = {
 				c[0][0], c[0][1], 1.0,     0.0,     0.0, 0.0, -c[0][0] * c[0][2], -c[0][1] * c[0][2], c[0][2],
