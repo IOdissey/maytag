@@ -26,6 +26,7 @@ namespace maytag
 		Contours _contours;
 		Quad _quad;
 		Decode _decode;
+		bool _dict_stat = false;
 
 	public:
 		Detector():
@@ -152,6 +153,11 @@ namespace maytag
 			_cfg.interpolate = interpolate;
 		}
 
+		void set_dict_stat(bool dict_stat)
+		{
+			_dict_stat = dict_stat;
+		}
+
 		// dict_size_scale - specifies the size of the dictionary.
 		// The larger the value, the larger the size but the faster the search.
 		// For the change to take effect, you must install before call add_family.
@@ -174,7 +180,7 @@ namespace maytag
 				if (tf.name == _cfg.tag_family[i].name)
 				{
 					// Expand tag variability if needed.
-					_cfg.tag_dict[i]->update_hamming(tf.hamming, dict_size_scale);
+					_cfg.tag_dict[i]->update_hamming(tf, dict_size_scale, _dict_stat);
 					// We use the same dictionaries.
 					if (tf.black != _cfg.tag_family[i].black)
 					{
@@ -187,7 +193,7 @@ namespace maytag
 				}
 			}
 			_cfg.tag_family.emplace_back(tf);
-			_cfg.tag_dict.emplace_back(std::make_shared<Dictionary>(tf, dict_size_scale));
+			_cfg.tag_dict.emplace_back(std::make_shared<Dictionary>(tf, dict_size_scale, _dict_stat));
 		}
 
 		//

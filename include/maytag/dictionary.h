@@ -25,7 +25,7 @@ namespace maytag::_
 		const uint64_t _mask; 
 		quick_decode_t* _dictionary = nullptr;
 		uint32_t _size = 0;
-		uint8_t _max_hamming = 0;
+		uint8_t _max_hamming = 255;
 		uint32_t _max_search = 0;
 
 		inline uint32_t _hash(uint64_t code) const
@@ -67,8 +67,13 @@ namespace maytag::_
 		}
 
 		//
-		void _create(double size_scale = 2.0)
+		bool _create(uint8_t hamming, double size_scale)
 		{
+			if (hamming > 3)
+				hamming = 3;
+			if (hamming <= _max_hamming && _max_hamming != 255)
+				return false;
+			_max_hamming = hamming;
 			uint32_t capacity = _ncodes;
 			if (_max_hamming >= 1)
 				capacity += _ncodes * _nbits;
@@ -82,6 +87,7 @@ namespace maytag::_
 			if (_dictionary)
 				delete[] _dictionary;
 			_dictionary = new quick_decode_t[_size];
+			_max_search = 0;
 			//
 			const uint64_t one = 1;
 			for (uint32_t i = 0; i < _ncodes; ++i)
@@ -125,29 +131,29 @@ namespace maytag::_
 					}
 				}
 			}
+			return true;
 		}
 
-		void _print_stat(const std::string& text) const
+		void _print_stat(const std::string& name, const std::string& text, double size_scale) const
 		{
-			std::cout << "Dictionary " << text << std::endl;
-			std::cout << "\tncodes: " << _ncodes << std::endl;
-			std::cout << "\thamming: " << static_cast<int>(_max_hamming) << std::endl;
-			std::cout << "\tmax_search: " << _max_search << std::endl;
-			std::cout << "\tsize: " << _size * sizeof(quick_decode_t) << " B" << std::endl;
+			std::cout << "MayTag dictionary " << text << "\n"
+				<< "\tname: " << name << "\n"
+				<< "\tncodes: " << _ncodes << "\n"
+				<< "\thamming: " << static_cast<int>(_max_hamming) << "\n"
+				<< "\tmax_search: " << _max_search << "\n"
+				<< "\tsize_scale: " << size_scale << "\n"
+				<< "\tsize: " << _size * sizeof(quick_decode_t) << " B" << std::endl;
 		}
 
 	public:
-		Dictionary(const tag_family_t& family, double size_scale = 2.0):
+		Dictionary(const tag_family_t& family, double size_scale = 3.0, bool stat = false):
 			_nbits(family.nbits),
 			_ncodes(family.ncodes),
 			_codes(family.codes),
 			_mask(((uint64_t)1 << family.nbits) - 1)
 		{
-			_max_hamming = family.hamming;
-			if (_max_hamming > 3)
-				_max_hamming = 3;
-			_create(size_scale);
-			_print_stat("created");
+			if (_create(family.hamming, size_scale) && stat)
+				_print_stat(family.name, "created", size_scale);
 		}
 
 		~Dictionary()
@@ -155,15 +161,10 @@ namespace maytag::_
 			delete[] _dictionary;
 		}
 
-		void update_hamming(uint8_t hamming, double size_scale = 2.0)
+		void update_hamming(const tag_family_t& family, double size_scale = 3.0, bool stat = false)
 		{
-			if (hamming > 3)
-				hamming = 3;
-			if (hamming <= _max_hamming)
-				return;
-			_max_hamming = hamming;
-			_create(size_scale);
-			_print_stat("updated");
+			if (_create(family.hamming, size_scale) && stat)
+				_print_stat(family.name, "updated", size_scale);
 		}
 
 		bool decode(uint64_t code, uint16_t& id, uint8_t& hamming, uint8_t& rot) const

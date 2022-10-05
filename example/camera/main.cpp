@@ -76,6 +76,7 @@ int main(int argc, char* argv[])
 	maytag::Detector detector;
 	detector.set_quad_decimate(decimate);
 	detector.set_refine_edges(refine);
+	detector.set_dict_stat(true);
 	if (family == "tag16h5")
 		detector.add_family(maytag::tag16h5(black, hamming));
 	else if (family == "tag25h9")

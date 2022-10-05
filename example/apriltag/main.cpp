@@ -47,6 +47,7 @@ public:
 		_detector.set_quad_decimate(decimate);
 		_detector.set_refine_edges(refine);
 		_detector.set_max_cos(std::cos(25 * M_PI / 180));
+		_detector.set_dict_stat(true);
 		if (family == "tag16h5")
 			_detector.add_family(maytag::tag16h5(black, hamming));
 		else if (family == "tag25h9")
