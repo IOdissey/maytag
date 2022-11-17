@@ -469,7 +469,7 @@ namespace maytag::_
 			if (!_calc_corners(best_lp, quad))
 				return false;
 			// Check tag size.
-			const uint32_t min_tag_size = _cfg->min_tag_size * _cfg->min_tag_size;
+			const double min_tag_size = _cfg->min_tag_size * _cfg->min_tag_size;
 			for (uint32_t i = 0; i < 4; i++)
 			{
 				const auto& p1 = quad.p[i];

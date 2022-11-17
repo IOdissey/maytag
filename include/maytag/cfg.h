@@ -21,7 +21,7 @@ namespace maytag::_
 		//
 		uint32_t min_contour_size = 24;
 		//
-		uint32_t min_tag_size = 6;
+		double min_tag_size = 6.0;
 		double min_tag_area = 36.0;
 		double max_cos = 0.9;           // cos (25 grad) = 0.9
 		double dot_thresh = 0.2;

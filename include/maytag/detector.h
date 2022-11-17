@@ -95,10 +95,19 @@ namespace maytag
 		}
 
 		//
-		void set_min_tag_size(uint32_t min_tag_size)
+		void set_center_eps(double center_eps)
 		{
-			if (min_tag_size < 5)
-				_cfg.min_tag_size = 5;
+			if (center_eps < 0.5)
+				_cfg.center_eps = 0.5;
+			else
+				_cfg.center_eps = center_eps;
+		}
+
+		//
+		void set_min_tag_size(double min_tag_size)
+		{
+			if (min_tag_size < 5.0)
+				_cfg.min_tag_size = 5.0;
 			else
 				_cfg.min_tag_size = min_tag_size;
 		}
