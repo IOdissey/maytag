@@ -217,6 +217,7 @@ namespace maytag::_
 						case 66:
 							_zero_connect(p - 1);
 							_zero_connect(p - w);
+							break;
 						// |0 0|
 						// |1 -| => 0001'0010 = 18
 						case 18:

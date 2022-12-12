@@ -162,13 +162,13 @@ namespace maytag::_
 					// Right order: 8000 * [0.0, 2.0].
 					if (dx > eps)
 					{
-						p.order = static_cast<uint16_t>(8000 * (1.0 - dy / dx));
+						p.order = static_cast<uint16_t>(8000.0 * (1.0 - dy / dx));
 						mask |= 1;
 					}
 					// Left order: 8000 * [4.0, 6.0].
 					else if (dx < -eps)
 					{
-						p.order = static_cast<uint16_t>(8000 * (5.0 - dy / dx));
+						p.order = static_cast<uint16_t>(8000.0 * (5.0 - dy / dx));
 						mask |= 2;
 					}
 					else
@@ -180,13 +180,13 @@ namespace maytag::_
 					// Top order: 8000 * [2.0, 4.0].
 					if (dy < -eps)
 					{
-						p.order = static_cast<uint16_t>(8000 * (3.0 + dx / dy));
+						p.order = static_cast<uint16_t>(8000.0 * (3.0 + dx / dy));
 						mask |= 4;
 					}
 					// Bottom order: 8000 * [6.0, 8.0].
 					else if (dy > eps)
 					{
-						p.order = static_cast<uint16_t>(8000 * (7.0 + dx / dy));
+						p.order = static_cast<uint16_t>(8000.0 * (7.0 + dx / dy));
 						mask |= 8;
 					}
 					else
