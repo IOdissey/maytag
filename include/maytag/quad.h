@@ -414,7 +414,8 @@ namespace maytag::_
 				std::nth_element(err2.begin(), err2.begin() + _cfg->max_nmaxima, err2.end(), std::greater<double>());
 				const double tresh = err2[_cfg->max_nmaxima];
 				const uint32_t i_max = maxima_size;
-				for (uint32_t i = 0, maxima_size = 0; i < i_max; ++i)
+				maxima_size = 0;
+				for (uint32_t i = 0; i < i_max; ++i)
 				{
 					if (err1[i] > tresh)
 						maxima[maxima_size++] = maxima[i];
